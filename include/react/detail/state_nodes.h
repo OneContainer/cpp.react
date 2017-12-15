@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include "node_base.h"
+#include "react/detail/node_base.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
@@ -98,7 +98,7 @@ public:
             }
         }
         else if (isInputModified_)
-        {            
+        {
             isInputModified_ = false;
             return UpdateResult::changed;
         }
@@ -202,8 +202,8 @@ public:
         StateSlotNode::StateNode( group, GetInternals(dep).Value() ),
         input_( dep )
     {
-        inputNodeId_ = GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
-        
+        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
+
         this->RegisterMe();
         this->AttachToMe(inputNodeId_);
         this->AttachToMe(GetInternals(dep).GetNodeId());
@@ -215,7 +215,7 @@ public:
         this->DetachFromMe(inputNodeId_);
         this->UnregisterMe();
 
-        GetGraphPtr()->UnregisterNode(inputNodeId_);
+        this->GetGraphPtr()->UnregisterNode(inputNodeId_);
     }
 
     virtual UpdateResult Update(TurnId turnId) noexcept override

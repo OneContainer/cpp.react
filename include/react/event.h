@@ -23,6 +23,14 @@
 #include "react/common/ptrcache.h"
 
 /*****************************************/ REACT_BEGIN /*****************************************/
+template <typename> class Event;
+/******************************************/ REACT_END /******************************************/
+/***************************************/ REACT_IMPL_BEGIN /**************************************/
+template <typename E>
+Event<E> SameGroupOrLink(const Group& targetGroup, const Event<E>& dep);
+/****************************************/ REACT_IMPL_END /***************************************/
+
+/*****************************************/ REACT_BEGIN /*****************************************/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Event
@@ -60,10 +68,10 @@ public:
     Event& operator=(Event&&) = default;
 
     auto GetGroup() const -> const Group&
-        { return GetNodePtr()->GetGroup(); }
+        { return this->GetNodePtr()->GetGroup(); }
 
     auto GetGroup() -> Group&
-        { return GetNodePtr()->GetGroup(); }
+        { return this->GetNodePtr()->GetGroup(); }
 
     friend bool operator==(const Event<E>& a, const Event<E>& b)
         { return a.GetNodePtr() == b.GetNodePtr(); }
@@ -83,7 +91,7 @@ protected:
     { }
 
     template <typename F, typename T>
-    static auto CreateProcessingNode(const Group& group, F&& func, const Event<T>& dep) -> decltype(auto)
+    static auto CreateProcessingNode(const Group& group, F&& func, const Event<T>& dep) -> std::shared_ptr<REACT_IMPL::EventNode<E>>
     {
         using REACT_IMPL::EventProcessingNode;
         using REACT_IMPL::SameGroupOrLink;
@@ -103,7 +111,7 @@ protected:
     }
 
     template <typename RET, typename NODE, typename ... ARGS>
-    friend static RET impl::CreateWrappedNode(ARGS&& ... args);
+    friend RET impl::CreateWrappedNode(ARGS&& ... args);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,14 +132,14 @@ public:
 
     EventSource(EventSource&& other) = default;
     EventSource& operator=(EventSource&& other) = default;
-    
+
     void Emit(const E& value)
         { EmitValue(value); }
 
     void Emit(E&& value)
         { EmitValue(std::move(value)); }
 
-    template <typename T = E, typename = std::enable_if_t<std::is_same_v<T, Token>>>
+    template <typename T = E, typename = std::enable_if_t<std::is_same<T, Token>::value>>
     void Emit()
         { EmitValue(Token::value); }
 
@@ -147,7 +155,7 @@ protected:
     { }
 
 private:
-    static auto CreateSourceNode(const Group& group) -> decltype(auto)
+    static auto CreateSourceNode(const Group& group) -> std::shared_ptr<REACT_IMPL::EventNode<E>>
     {
         using REACT_IMPL::EventSourceNode;
         return std::make_shared<EventSourceNode<E>>(group);
@@ -219,7 +227,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(SameGroupOrLink(GetGroup(), input)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(SameGroupOrLink(this->GetGroup(), input)); });
     }
 
     void RemoveSlotInput(const Event<E>& input)
@@ -232,7 +240,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(SameGroupOrLink(GetGroup(), input)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(SameGroupOrLink(this->GetGroup(), input)); });
     }
 
     void RemoveAllSlotInputs()
@@ -274,12 +282,12 @@ protected:
     { }
 
 private:
-    static auto GetOrCreateLinkNode(const Group& group, const Event<E>& input) -> decltype(auto)
+    static auto GetOrCreateLinkNode(const Group& group, const Event<E>& input) -> std::shared_ptr<REACT_IMPL::EventNode<E>>
     {
         using REACT_IMPL::EventLinkNode;
         using REACT_IMPL::IReactNode;
         using REACT_IMPL::ReactGraph;
-        
+
         IReactNode* k = GetInternals(input).GetNodePtr().get();
 
         ReactGraph::LinkCache& linkCache = GetInternals(group).GetGraphPtr()->GetLinkCache();
@@ -403,7 +411,7 @@ static auto Join(const Event<U1>& dep1, const Event<Us>& ... deps) -> Event<std:
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
 template <typename E>
-static Event<E> SameGroupOrLink(const Group& targetGroup, const Event<E>& dep)
+Event<E> SameGroupOrLink(const Group& targetGroup, const Event<E>& dep)
 {
     if (dep.GetGroup() == targetGroup)
         return dep;

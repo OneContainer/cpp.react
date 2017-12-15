@@ -106,7 +106,7 @@ public:
 
     template <typename F>
     void EnqueueTransaction(F&& func, SyncPoint::Dependency dep, TransactionFlags flags);
-    
+
     LinkCache& GetLinkCache()
         { return linkCache_; }
 
@@ -119,8 +119,8 @@ private:
         NodeData& operator=(const NodeData&) = default;
 
         NodeData(IReactNode* nodePtrIn, NodeCategory categoryIn) :
-            nodePtr( nodePtrIn ),
-            category(categoryIn)
+            category(categoryIn),
+            nodePtr( nodePtrIn )
         { }
 
         NodeCategory category = NodeCategory::normal;
@@ -187,12 +187,12 @@ private:
 template <typename F>
 void ReactGraph::PushInput(NodeId nodeId, F&& inputCallback)
 {
-    auto& node = nodeData_[nodeId];
-    auto* nodePtr = node.nodePtr;
+    // auto& node = nodeData_[nodeId];
+    // auto* nodePtr = node.nodePtr;
 
     // This writes to the input buffer of the respective node.
     std::forward<F>(inputCallback)();
-    
+
     changedInputs_.push_back(nodeId);
 
     if (transactionLevel_ == 0)

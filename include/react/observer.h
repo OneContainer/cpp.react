@@ -80,7 +80,7 @@ private:
     }
 
     template <typename F, typename T>
-    static auto CreateEventObserverNode(const Group& group, F&& func, const Event<T>& dep) -> decltype(auto)
+    static auto CreateEventObserverNode(const Group& group, F&& func, const Event<T>& dep) -> std::shared_ptr<REACT_IMPL::ObserverNode>
     {
         using REACT_IMPL::EventObserverNode;
         return std::make_shared<EventObserverNode<typename std::decay<F>::type, T>>(

@@ -147,7 +147,7 @@ public:
     EventSlotNode(const Group& group) :
         EventSlotNode::EventNode( group )
     {
-        inputNodeId_ = GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
+        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
         this->RegisterMe();
 
         this->AttachToMe(inputNodeId_);
@@ -159,7 +159,7 @@ public:
         this->DetachFromMe(inputNodeId_);
 
         this->UnregisterMe();
-        GetGraphPtr()->UnregisterNode(inputNodeId_);
+        this->GetGraphPtr()->UnregisterNode(inputNodeId_);
     }
 
     virtual UpdateResult Update(TurnId turnId) noexcept override
@@ -424,7 +424,7 @@ public:
         srcGraphPtr->DetachNode(outputNodeId_, GetInternals(dep_).GetNodeId());
         srcGraphPtr->UnregisterNode(outputNodeId_);
 
-        auto& linkCache = GetGraphPtr()->GetLinkCache();
+        auto& linkCache = this->GetGraphPtr()->GetLinkCache();
         linkCache.Erase(this);
 
         this->UnregisterMe();

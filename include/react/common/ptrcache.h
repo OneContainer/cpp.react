@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "react/detail/Defs.h"
+#include "react/detail/defs.h"
 
 #include <memory>
 #include <mutex>
@@ -45,7 +45,7 @@ public:
         }
 
         std::shared_ptr<V> v = createFunc();
-        auto res = map_.emplace(key, v);
+        // auto res = map_.emplace(key, v);
         return v;
     }
 
